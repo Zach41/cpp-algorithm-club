@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 namespace alg_club {
     template <typename T>
@@ -34,9 +35,16 @@ namespace alg_club {
             return height(root);
         }
 
-        void preOrder();
-        void inOrder();
-        void postOrder();
+        void preOrder(std::vector<T> &preorder_vec) {
+            preOrder(root, preorder_vec);
+        }
+
+        void inOrder(std::vector<T> &inorder_vec) {
+            inOrder(root, inorder_vec);
+        }
+        void postOrder(std::vector<T> &postorder_vec) {
+            postOrder(root, postorder_vec);
+        }
 
         AVLTreeNode<T>* search(T key) {
             return search(root, key);
@@ -64,7 +72,7 @@ namespace alg_club {
         void remove(T key) {
             auto node_ptr = search(root, key);
             if (node_ptr == nullptr)
-                std::cerr << "Key does not exist.\n";
+                throw std::runtime_error("Key does not exist.");
             else {
                 remove(root, node_ptr);
             }
@@ -73,20 +81,38 @@ namespace alg_club {
         void destroy() {
             destroy(root);
         }
-
-        void print();
-    
-        AVLTreeNode<T>* root;
     private:
+        AVLTreeNode<T>* root;
+
         int height(AVLTreeNode<T>* node) {
             if (node != nullptr)
                 return node -> height;
             return 0;
         }
 
-        void preOrder(AVLTreeNode<T> *node) const;
-        void inOrder(AVLTreeNode<T> *node) const;
-        void postOrder(AVLTreeNode<T> *node) const;
+        void preOrder(AVLTreeNode<T> *node, std::vector<T>& preorder_vec) const {
+            if (node == nullptr)
+                return;
+            preorder_vec.push_back(node -> key);
+            preOrder(node -> left, preorder_vec);
+            preOrder(node -> right, preorder_vec);
+        }
+
+        void inOrder(AVLTreeNode<T> *node, std::vector<T>& inorder_vec) const {
+            if (node == nullptr)
+                return;
+            inOrder(node -> left, inorder_vec);
+            inorder_vec.push_back(node -> key);
+            inOrder(node -> right, inorder_vec);
+        }
+
+        void postOrder(AVLTreeNode<T> *node, std::vector<T>& postorder_vec) const {
+            if (node == nullptr)
+                return;
+            postOrder(node -> left, postorder_vec);
+            postOrder(node -> right, postorder_vec);
+            postorder_vec.push_back(node -> key);
+        }
 
         AVLTreeNode<T>* search(AVLTreeNode<T>* node, T key) const {
             if (node == nullptr || node -> key == key) {
@@ -151,8 +177,7 @@ namespace alg_club {
             if  (tree == nullptr) {
                 tree = new AVLTreeNode<T>(key, nullptr, nullptr);
                 if (tree == nullptr) {
-                    std::cerr << "ERROR: create avltree node failed!\n";
-                    return nullptr;
+                    throw std::runtime_error("ERROR: create avltree node failed!");
                 }
             } else if (key < tree -> key) {
                 tree -> left = insert(tree -> left, key);
@@ -171,7 +196,7 @@ namespace alg_club {
                         tree = rightLeftRotation(tree);
                 }
             } else {
-                std::cerr << "ERROR: key already exists\n";
+                throw std::runtime_error("ERROR: key already exists");
             }
 
             tree -> height = std::max(height(tree -> left), height(tree -> right)) + 1;
@@ -192,6 +217,7 @@ namespace alg_club {
                 }
             } else if (z -> key < tree -> key) {
                 tree -> left = remove(tree -> left, z);
+                std::cerr << "Left: " << height(tree -> left) << "\tRight: " << height(tree -> right) << '\n';
                 if (height(tree -> right) - height(tree -> left) > 1) {
                     AVLTreeNode<T>* right = tree -> right;
                     if (height(right -> right) > height(right -> left))
@@ -216,11 +242,12 @@ namespace alg_club {
                     delete tmp;
                 }
             }
-            tree -> height = std::max(height(tree -> left), height(tree -> right)) + 1;
+            if (tree)
+                tree -> height = std::max(height(tree -> left), height(tree -> right)) + 1;
             return tree;
         }
 
-        void destroy(AVLTreeNode<T>* &root) {
+        void destroy(AVLTreeNode<T>* root) {
             if (root == nullptr)
                 return;
             if (root -> left)
@@ -229,8 +256,6 @@ namespace alg_club {
                 destroy(root -> right);
             delete root;
         }
-
-        void print(AVLTreeNode<T>* node, T key, int direction);
     };
 }
 
